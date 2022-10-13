@@ -5,5 +5,5 @@ spacy
 bs4
 transformers
 requests
-tensorflow==2.9.0-rc2
+torch
 carbon-api
