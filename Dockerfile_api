@@ -7,11 +7,17 @@ ADD utils.py ${LAMBDA_TASK_ROOT}
 
 # Install deps
 COPY google-chrome.repo /etc/yum.repos.d/google-chrome.repo
-RUN yum -y update && yum -y install google-chrome-stable
+RUN yum -y update && yum -y install google-chrome-stable libXScrnSaver
 RUN pip install -r requirements.txt
+
+# Install carbon
+ADD Carbon/ ${LAMBDA_TASK_ROOT}/Carbon/
+RUN cd ${LAMBDA_TASK_ROOT}/Carbon/ && python setup.py install && cd ${LAMBDA_TASK_ROOT}
 
 # Run load
 RUN python load_hugging.py
+
+# TODO can we preload chrome 
 
 # Make dirs
 RUN mkdir -p /tmp/ppts/

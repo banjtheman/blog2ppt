@@ -1,11 +1,13 @@
 # Added
+build_and_push.sh
 .vscode/
 notes.txt
 ppts
 downloaded_images
 */node_modules
 */.serverless
-
+Carbon/*
+Carbon/
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
