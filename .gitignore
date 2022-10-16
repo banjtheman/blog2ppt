@@ -3,6 +3,8 @@
 notes.txt
 ppts
 downloaded_images
+*/node_modules
+*/.serverless
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

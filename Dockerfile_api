@@ -1,0 +1,25 @@
+FROM public.ecr.aws/lambda/python:3.9
+
+# Add prereq files
+ADD requirements.txt ${LAMBDA_TASK_ROOT}
+ADD load_hugging.py /${LAMBDA_TASK_ROOT}
+ADD utils.py ${LAMBDA_TASK_ROOT}
+
+# Install deps
+COPY google-chrome.repo /etc/yum.repos.d/google-chrome.repo
+RUN yum -y update && yum -y install google-chrome-stable
+RUN pip install -r requirements.txt
+
+# Run load
+RUN python load_hugging.py
+
+# Make dirs
+RUN mkdir -p /tmp/ppts/
+RUN mkdir -p /tmp/downloaded_images/
+
+# Add code files
+ADD html_scrape_play.py /${LAMBDA_TASK_ROOT}
+ADD handler.py /${LAMBDA_TASK_ROOT}
+
+# Run Function
+CMD ["handler.lambda_entry_point"]

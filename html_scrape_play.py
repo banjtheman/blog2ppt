@@ -1,6 +1,8 @@
 # Python imports
 import requests
 from typing import Type, Union, Dict, Any, List
+import os
+os.environ['TRANSFORMERS_CACHE'] = '/tmp/' # Set tmp as transformers cache
 
 # 3rd party imports
 from bs4 import BeautifulSoup
@@ -53,7 +55,7 @@ async def get_carbon_image(code: str) -> str:
     Return:
         file_path: loc of carbon file
     """
-    img = await carbon_client.create(code)
+    img = await carbon_client.create(code, downloads_dir="/tmp/")
     return img
 
 
@@ -138,9 +140,25 @@ def get_html_sections(url: str):
         cover_image = f'https://{cover_text.split("https://")[2]}'
 
     # Download image
-    image_name = cover_image.split("/")[-1]
-    image_dl_loc = f"downloaded_images/{image_name}"
-    urllib.request.urlretrieve(cover_image, image_dl_loc)
+    try:
+        image_name = cover_image.split("/")[-1]
+        image_dl_loc = f"/tmp/downloaded_images/{image_name}"
+        # Just to be safe
+        os.system("mkdir -p /tmp/downloaded_images/")
+        urllib.request.urlretrieve(cover_image, image_dl_loc)
+    except:
+        print("Url not found...")
+        print(cover_image)
+        try:
+            image_name = "cover_image.png"
+            image_dl_loc = f"/tmp/downloaded_images/{image_name}"
+            urllib.request.urlretrieve(cover_text, image_dl_loc)
+        except:
+            print("Can't get image...")
+            print(cover_text)
+            cover_image = None
+            image_dl_loc = None
+
 
     blog_json["title"] = title
     blog_json["desc"] = desc
@@ -283,7 +301,8 @@ async def convert_sections_to_ppt(blog_sections, num_sections, prog_bar=None):
 
     placeholder = slide.placeholders[1]
     slide.shapes.title.text = title
-    placeholder.insert_picture(cover_image)
+    if cover_image:
+        placeholder.insert_picture(cover_image)
     slide.placeholders[2].text = desc
 
     # prog_update = int(100 / num_sections)
@@ -364,7 +383,7 @@ async def convert_sections_to_ppt(blog_sections, num_sections, prog_bar=None):
 
             elif elem_type == "code":
                 curr_code = element["data"]
-                img_path = await carbon_client.create(curr_code)
+                img_path = await carbon_client.create(curr_code, downloads_dir="/tmp/")
 
                 # Create slide with code snippet
                 slide = ppt.slides.add_slide(blank_layout)
@@ -378,7 +397,7 @@ async def convert_sections_to_ppt(blog_sections, num_sections, prog_bar=None):
                 curr_image = element["data"]
 
                 image_name = curr_image.split("/")[-1]
-                image_dl_loc = f"downloaded_images/{image_name}"
+                image_dl_loc = f"/tmp/downloaded_images/{image_name}"
                 urllib.request.urlretrieve(curr_image, image_dl_loc)
 
                 # Create slide with image
@@ -404,8 +423,9 @@ async def convert_sections_to_ppt(blog_sections, num_sections, prog_bar=None):
 
 
 async def main():
+    print("loading data...")
     blog_url = (
-        "https://dev.to/banjtheman/how-i-built-a-full-stack-web3-app-on-the-cloud-574j"
+        "https://dev.to/banjtheman/dc-fire-and-ems-data-visualizer-4a6l"
     )
 
     print(f"Converting blog {blog_url} to ppt")
@@ -416,7 +436,7 @@ async def main():
     # utils.write_to_file("example.html", html_text)
 
     ppt = await convert_sections_to_ppt(blog_sections, num_sections)
-    ppt.save("ppts/end_to_end.pptx")
+    ppt.save("end_to_end.pptx")
 
     print("done and done")
 
